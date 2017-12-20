@@ -1,12 +1,15 @@
-# File: datetimepicker/widgets.py
+# File: daterangepicker/widgets.py
 from django import forms 
+from django.forms import fields
+
 from django.utils import formats, timezone
+from django.utils.translation import gettext_lazy as _
 
 DATETIME_FORMAT = '%m/%d/%Y %h:%M %p'
 
 
 class DateTimeRangeWidget(forms.TextInput):
-    template_name = 'datetimepicker/forms/widgets/datetimerange.html'
+    template_name = 'daterangepicker/forms/widgets/datetimerange.html'
 
     def __init__(self, attrs=None, format=DATETIME_FORMAT):
         super().__init__(attrs)
@@ -26,23 +29,24 @@ class DateTimeRangeWidget(forms.TextInput):
 
     class Media:
         css = {
-                'all': ('datetimepicker/css/styles.css', ),
+                'all': ('daterangepicker/css/styles.css', ),
             }
 
         js = (
             '//cdn.jsdelivr.net/momentjs/latest/moment.min.js',
             '//cdn.jsdelivr.net/bootstrap.daterangepicker/2/daterangepicker.js',
-            'datetimepicker/js/script.js',
+            'daterangepicker/js/script.js',
         )
 
 
-class DateTimeRangeField(forms.BaseTemporalField):
+class DateTimeRangeField(fields.BaseTemporalField):
     widget = DateTimeRangeWidget
     input_formats = ['{0} - {0}'.format(DATETIME_FORMAT), ]
     
     default_error_messages = {
-        'invalid': _('Enter two date/time pairs.')),
-    
+                'invalid': _('Enter two date/time pairs.'),
+            }  
+
     def prepare_value(self, value):
         date_range = []
        
@@ -64,7 +68,7 @@ class DateTimeRangeField(forms.BaseTemporalField):
         return datetime.datetime.strptime(value, format)
     
 
-class DateTimeField(BaseTemporalField):
+#class DateTimeField(BaseTemporalField):
 #     widget = DateTimeInput
 #     input_formats = formats.get_format_lazy('DATETIME_INPUT_FORMATS')
 #     default_error_messages = {
@@ -75,22 +79,22 @@ class DateTimeField(BaseTemporalField):
 #         if isinstance(value, datetime.datetime):
 #             value = to_current_timezone(value)
 #         return value
-
-    def to_python(self, value):
-        """
-        Validate that the input can be converted to a datetime. Return a
-        Python datetime.datetime object.
-        """
-        if value in self.empty_values:
-            return None
-        if isinstance(value, datetime.datetime):
-            return from_current_timezone(value)
-        if isinstance(value, datetime.date):
-            result = datetime.datetime(value.year, value.month, value.day)
-            return from_current_timezone(result)
-        result = super().to_python(value)
-        return from_current_timezone(result)
-
-    def strptime(self, value, format):
-        return datetime.datetime.strptime(value, format)
-
+# 
+#     def to_python(self, value):
+#         """
+#         Validate that the input can be converted to a datetime. Return a
+#         Python datetime.datetime object.
+#         """
+#         if value in self.empty_values:
+#             return None
+#         if isinstance(value, datetime.datetime):
+#             return from_current_timezone(value)
+#         if isinstance(value, datetime.date):
+#             result = datetime.datetime(value.year, value.month, value.day)
+#             return from_current_timezone(result)
+#         result = super().to_python(value)
+#         return from_current_timezone(result)
+# 
+#     def strptime(self, value, format):
+#         return datetime.datetime.strptime(value, format)
+# 

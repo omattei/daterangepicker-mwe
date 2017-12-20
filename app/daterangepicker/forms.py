@@ -1,9 +1,9 @@
-# File: datetimepicker/forms.py
+# File: daterangepicker/forms.py
 from django.forms import ModelForm, ValidationError
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
-from datetimepicker.widgets import DateTimeRangeField
+from daterangepicker.widgets import DateTimeRangeField
 import dateutil.parser
 
 

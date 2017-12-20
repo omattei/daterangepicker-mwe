@@ -1,5 +1,6 @@
+# File: daterangepicker/apps.py
 from django.apps import AppConfig
 
 
-class DateTimePickerConfig(AppConfig):
-    name = 'datetimepicker'
+class DateRangePickerConfig(AppConfig):
+    name = 'daterangepicker'
