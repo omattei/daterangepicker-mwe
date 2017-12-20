@@ -35,7 +35,11 @@ ALLOWED_HOSTS = []
 INSTALLED_APPS = [
     'daterangepicker',
     'simpleapp',
-
+    
+    # third-party libs
+    'bootstrapform',
+    
+    # Django builtins
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',

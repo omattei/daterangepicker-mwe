@@ -11,10 +11,12 @@
     {% for event in events %}
     <p>
       <strong>{{ event.title }}</strong> from 
-      {{ event.start_time }} &ndash; {{ event.end_time }}
+      {{ event.time_start }} &ndash; {{ event.time_end }}
     </p>
     {% empty %}
       No events yet! Check back later.
     {% endfor %}
+
+    <a href="{% url 'simpleapp:create_event' %}">Add a new event</a>
   </div>
 {% endblock %}
