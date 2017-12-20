@@ -1,0 +1,10 @@
+# File: simpleapp/urls.py
+
+from django.urls import path
+from simpleapp import views
+
+app_name = 'simpleapp'
+urlpatterns = [
+    path('', views.home),
+    path('new/*', views.create),
+]

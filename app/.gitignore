@@ -1,0 +1,6 @@
+# Ignore SQLite db
+db.sqlite3
+
+# Ignore coverage report
+.coverage
+coverage.xml

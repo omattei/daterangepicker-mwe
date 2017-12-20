@@ -1,0 +1,4 @@
+<input type="text" name="date_range" 
+  {% if widget.value != None %}
+    value="{{ widget.value }}"
+  {% endif %}{% include "django/forms/widgets/attrs.html" %} />

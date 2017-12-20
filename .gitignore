@@ -1,0 +1,21 @@
+# Ignore JetBrains .idea folder
+.idea/
+
+# swap/backup files
+*.swp
+*.bak
+*~
+
+# Python cache stuff
+__pycache__/
+*.pyc
+
+# virtualenv stuff
+bin/
+include/
+lib/
+pip-selfcheck.json
+
+# I use this to replace tabs with 4 spaces, but don't want to confuse people by
+# putting it in the repo. <rcs8vq>
+.gitattributes

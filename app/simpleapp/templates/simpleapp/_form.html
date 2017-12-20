@@ -1,0 +1,11 @@
+{% load bootstrap %}
+
+<form method="post" 
+  {% if action_url != None %}action="{{ action_url }}"{% endif %} 
+  {% if form.is_multipart %}enctype="multipart/form-data"{% endif %}>
+  
+  {% csrf_token %}
+  {{ form|bootstrap }}
+  <input class="btn btn-primary" type="submit" value="{{ submit_text|default:'Submit' }}">
+
+</form>
