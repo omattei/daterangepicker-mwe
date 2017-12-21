@@ -1,5 +1,9 @@
 {% load bootstrap %}
 
+{% block extrahead %}
+  {{ form.media }}
+{% endblock %}
+
 <form method="post" 
   {% if action_url != None %}action="{{ action_url }}"{% endif %} 
   {% if form.is_multipart %}enctype="multipart/form-data"{% endif %}>

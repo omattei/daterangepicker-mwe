@@ -8,6 +8,12 @@
   </h2>
 
   <div id="content">
+    {% if created %}
+    <div class="alert alert-success">
+      <strong>Success!</strong> Event has been created.
+    </div>
+    {% endif %}
+
     {% include '_form.html' %}
   </div>
 {% endblock %}

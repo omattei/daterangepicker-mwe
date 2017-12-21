@@ -1,18 +1,42 @@
 # File: daterangepicker/widgets.py
 from django import forms 
-from django.forms import fields
+from django.forms import ValidationError, fields
 
 from django.utils import formats, timezone
 from django.utils.translation import gettext_lazy as _
+from django.forms.utils import to_current_timezone, from_current_timezone
 
-DATETIME_FORMAT = '%m/%d/%Y %h:%M %p'
+import datetime
+
+DATETIME_FORMAT = '%m/%d/%Y %I:%M %p'
+
+
+def time_range_validator(time_range):
+    """ Validate that a range of two date/timees makes logical sense. """
+    start_time, end_time, *extra = time_range
+    
+    if extra: 
+        raise ValidationError(_("Expected exactly two dates."))
+
+    now = timezone.now()
+
+    if start_time and end_time:
+        if start_time < now:
+            raise ValidationError(_("Start date is in the past."))
+
+        if end_time < now:
+            raise ValidationError(_("End date is in the past."))
+
+        if end_time < start_time:
+            raise ValidationError(_("End date is before start date."))
 
 
 class DateTimeRangeWidget(forms.TextInput):
     template_name = 'daterangepicker/forms/widgets/datetimerange.html'
+    supports_microseconds = True
 
-    def __init__(self, attrs=None, format=DATETIME_FORMAT):
-        super().__init__(attrs)
+    def __init__(self, attrs=None, format=DATETIME_FORMAT, **kwargs):
+        super(DateTimeRangeWidget, self).__init__(attrs)
         self.format = format 
 
     def format_value(self, value):
@@ -41,60 +65,25 @@ class DateTimeRangeWidget(forms.TextInput):
 
 class DateTimeRangeField(fields.BaseTemporalField):
     widget = DateTimeRangeWidget
-    input_formats = ['{0} - {0}'.format(DATETIME_FORMAT), ]
-    
-    default_error_messages = {
-                'invalid': _('Enter two date/time pairs.'),
-            }  
+    default_validators = [time_range_validator, ]
 
-    def prepare_value(self, value):
-        date_range = []
-       
-        for date in value:
-            if isinstance(date, datetime.datetime):
-                date_range.append(to_current_timezone(date))
-            else:
-                date_range.append(date)
-
-        return date_range
-    
+    def __init__(self, **kwargs):
+        super(DateTimeRangeField, self).__init__(
+                    input_formats=[DATETIME_FORMAT,],
+                    **kwargs,
+                )
+   
     def to_python(self, value):
-        if value in self.empty_values:
-            return None
-        
-        return from_current_timezone(result)
+        _time_range = value.strip().split(' - ')
+        start_time, end_time, *extra = [
+                    super(DateTimeRangeField, self).to_python(t.strip()) 
+                    for t in _time_range
+                ]
+
+        if extra: 
+            raise ValidationError(_("Expected exactly two dates."))
+
+        return start_time, end_time
 
     def strptime(self, value, format):
         return datetime.datetime.strptime(value, format)
-    
-
-#class DateTimeField(BaseTemporalField):
-#     widget = DateTimeInput
-#     input_formats = formats.get_format_lazy('DATETIME_INPUT_FORMATS')
-#     default_error_messages = {
-#         'invalid': _('Enter a valid date/time.'),
-#     }
-# 
-#     def prepare_value(self, value):
-#         if isinstance(value, datetime.datetime):
-#             value = to_current_timezone(value)
-#         return value
-# 
-#     def to_python(self, value):
-#         """
-#         Validate that the input can be converted to a datetime. Return a
-#         Python datetime.datetime object.
-#         """
-#         if value in self.empty_values:
-#             return None
-#         if isinstance(value, datetime.datetime):
-#             return from_current_timezone(value)
-#         if isinstance(value, datetime.date):
-#             result = datetime.datetime(value.year, value.month, value.day)
-#             return from_current_timezone(result)
-#         result = super().to_python(value)
-#         return from_current_timezone(result)
-# 
-#     def strptime(self, value, format):
-#         return datetime.datetime.strptime(value, format)
-# 
