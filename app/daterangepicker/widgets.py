@@ -20,35 +20,36 @@ def time_range_validator(time_range):
 
     now = timezone.now()
 
-    if start_time and end_time:
-        if start_time < now:
-            raise ValidationError(_("Start date is in the past."))
+    if start_time < now:
+        raise ValidationError(_("Start date is in the past."))
 
-        if end_time < now:
-            raise ValidationError(_("End date is in the past."))
+    if end_time < now:
+        raise ValidationError(_("End date is in the past."))
 
-        if end_time < start_time:
-            raise ValidationError(_("End date is before start date."))
+    if end_time < start_time:
+        raise ValidationError(_("End date is before start date."))
 
 
 class DateTimeRangeWidget(forms.TextInput):
     template_name = 'daterangepicker/forms/widgets/datetimerange.html'
     supports_microseconds = True
 
-    def __init__(self, attrs=None, format=DATETIME_FORMAT, **kwargs):
+    def __init__(self, attrs=None, format=DATETIME_FORMAT):
         super(DateTimeRangeWidget, self).__init__(attrs)
         self.format = format 
-
-    def format_value(self, value):
-        now = timezone.now()
+        
+    def format_value(self, time_range):
         fmt = self.format
-
-        if not value:
-            return '{0} - {0}'.format(formats.localize_input(now, fmt))
+        
+        if not time_range:
+            now = timezone.now()
+            start_time, end_time = [now, now]
+        else:
+            start_time, end_time, *extra = time_range
 
         return '{} - {}'.format(
-                    formats.localize_input(value[0], fmt),
-                    formats.localize_input(value[1], fmt),
+                    start_time.strftime(fmt),
+                    end_time.strftime(fmt),
                 )
 
     class Media:
@@ -67,16 +68,34 @@ class DateTimeRangeField(fields.BaseTemporalField):
     widget = DateTimeRangeWidget
     default_validators = [time_range_validator, ]
 
-    def __init__(self, **kwargs):
+    def __init__(self, initial=None, **kwargs):
+        now = timezone.now()
+        
+        if initial is None or None in initial:
+            initial = [now, now]
+
         super(DateTimeRangeField, self).__init__(
                     input_formats=[DATETIME_FORMAT,],
+                    initial=initial,
                     **kwargs,
                 )
    
     def to_python(self, value):
         _time_range = value.strip().split(' - ')
+
+        # For each date/time string in the _time_range list:
+        #
+        # (1) Run the superclass's to_python method to return a timezone-naïve
+        #     object.
+        # (2) Then, convert that timezone-naïve object into a timezone-aware
+        #     object. 
+        # 
+        # If the list contained more than two strings, these will be placed in
+        # the extra list.
         start_time, end_time, *extra = [
-                    super(DateTimeRangeField, self).to_python(t.strip()) 
+                    from_current_timezone(
+                            super(DateTimeRangeField, self).to_python(t)
+                        ) 
                     for t in _time_range
                 ]
 
@@ -87,3 +106,4 @@ class DateTimeRangeField(fields.BaseTemporalField):
 
     def strptime(self, value, format):
         return datetime.datetime.strptime(value, format)
+

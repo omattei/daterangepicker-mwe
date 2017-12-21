@@ -20,16 +20,14 @@ class TimeRangedModelForm(ModelForm):
         # included still.
         self.fields.pop('time_start', None)
         self.fields.pop('time_end', None)
-
-        # Parse existing instance's time_start and time_end fields into our
-        # time_range field. 
-        instance = kwargs.get('instance', None)
-        now = timezone.now()
-
-        self.fields['time_range'].initial = [
-                    instance.time_start, 
-                    instance.time_end,
-                ] if instance is not None else [now, now]
+        
+        # If we are updating an existing object, make sure the time_range
+        # defaults reflect this.
+        if 'instance' in kwargs:
+            self.fields['time_range'].initial = [
+                        self.instance.time_start, 
+                        self.instance.time_end,
+                    ]
 
     def save(self, commit=True):
         """ 
