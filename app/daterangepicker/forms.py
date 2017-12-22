@@ -1,6 +1,5 @@
 # File: daterangepicker/forms.py
 from django.forms import ModelForm
-from django.utils import timezone
 
 from daterangepicker.widgets import DateTimeRangeField
 

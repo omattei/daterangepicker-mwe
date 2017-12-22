@@ -15,6 +15,7 @@ def home(request):
                 }
             )
 
+
 def create_event(request):
     form = forms.EventForm(request.POST or None)
     created = False

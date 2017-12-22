@@ -1,12 +1,10 @@
 # File: daterangepicker/widgets.py
 from django.forms import ValidationError, TextInput
 from django.forms.fields import DateTimeField, MultiValueField
-from django.forms.utils import to_current_timezone, from_current_timezone
+from django.forms.utils import to_current_timezone
 
-from django.utils import formats, timezone
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
-
-import datetime
 
 DATETIME_FORMAT = '%m/%d/%Y %I:%M %p'
 
@@ -65,10 +63,11 @@ class DateTimeRangeWidget(TextInput):
                 'all': ('daterangepicker/css/styles.css', ),
             }
         js = (
-            '//cdn.jsdelivr.net/momentjs/latest/moment.min.js',
-            '//cdn.jsdelivr.net/bootstrap.daterangepicker/2/daterangepicker.js',
-            'daterangepicker/js/script.js',
-        )
+                '//cdn.jsdelivr.net/momentjs/latest/moment.min.js',
+                '//cdn.jsdelivr.net/bootstrap.daterangepicker/2/' 
+                    + 'daterangepicker.js',
+                'daterangepicker/js/script.js',
+            )
 
 
 class DateTimeRangeField(MultiValueField):
