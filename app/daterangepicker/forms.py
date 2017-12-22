@@ -36,7 +36,7 @@ class TimeRangedModelForm(ModelForm):
         
         """
         super(TimeRangedModelForm, self).save(commit=False)
-        
+
         time_start, time_end = self.cleaned_data['time_range']
 
         self.instance.time_start = time_start

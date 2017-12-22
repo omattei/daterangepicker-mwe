@@ -1,7 +1,7 @@
 $(function() {
   $('input[name="time_range"]').daterangepicker({
     timePicker: true,
-    timePickerIncrement: 15,
+    timePickerIncrement: 1,
     locale: {
       format: 'MM/DD/YYYY hh:mm A'
     }

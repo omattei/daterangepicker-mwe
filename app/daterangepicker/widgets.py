@@ -1,10 +1,10 @@
 # File: daterangepicker/widgets.py
-from django import forms 
-from django.forms import ValidationError, fields
+from django.forms import ValidationError, TextInput
+from django.forms.fields import DateTimeField, MultiValueField
+from django.forms.utils import to_current_timezone, from_current_timezone
 
 from django.utils import formats, timezone
 from django.utils.translation import gettext_lazy as _
-from django.forms.utils import to_current_timezone, from_current_timezone
 
 import datetime
 
@@ -30,7 +30,7 @@ def time_range_validator(time_range):
         raise ValidationError(_("End date is before start date."))
 
 
-class DateTimeRangeWidget(forms.TextInput):
+class DateTimeRangeWidget(TextInput):
     template_name = 'daterangepicker/forms/widgets/datetimerange.html'
     supports_microseconds = True
 
@@ -55,7 +55,6 @@ class DateTimeRangeWidget(forms.TextInput):
             if extra: 
                 raise ValueError(_("Expected exactly two dates."))
 
-
         return '{} - {}'.format(
                     start_time.strftime(format),
                     end_time.strftime(format),
@@ -65,7 +64,6 @@ class DateTimeRangeWidget(forms.TextInput):
         css = {
                 'all': ('daterangepicker/css/styles.css', ),
             }
-
         js = (
             '//cdn.jsdelivr.net/momentjs/latest/moment.min.js',
             '//cdn.jsdelivr.net/bootstrap.daterangepicker/2/daterangepicker.js',
@@ -73,36 +71,40 @@ class DateTimeRangeWidget(forms.TextInput):
         )
 
 
-class DateTimeRangeField(fields.BaseTemporalField):
+class DateTimeRangeField(MultiValueField):
     widget = DateTimeRangeWidget
     default_validators = [time_range_validator, ]
 
     def __init__(self, initial=None, **kwargs):
-        super(DateTimeRangeField, self).__init__(
-                    input_formats=[DATETIME_FORMAT,],
-                    initial=initial,
-                    **kwargs,
+        if initial is None:
+            initial = [None, None]
+        elif len(initial) != 2:
+            raise ValueError(_("Initial data list was expected to have exactly"
+                + " two dates."))
+
+        fields = (
+                    DateTimeField(
+                            initial=initial[0],
+                            input_formats=[DATETIME_FORMAT, ],
+                            **kwargs,
+                        ),
+                    DateTimeField(
+                            initial=initial[1],
+                            input_formats=[DATETIME_FORMAT, ],
+                            **kwargs,
+                        ),
                 )
-   
-    def to_python(self, value):
+
+        super(DateTimeRangeField, self).__init__(fields, **kwargs)
+
+    def clean(self, value):
         _time_range = value.strip().split(' - ')
 
-        # For each date/time string in the _time_range list:
-        #
-        # (1) Run the superclass's to_python method to return a timezone-naïve
-        #     object.
-        # (2) Then, convert that timezone-naïve object into a timezone-aware
-        #     object. 
-        # 
-        # If the list contained more than two strings, these will be placed in
-        # the extra list.
+        return super(DateTimeRangeField, self).clean(_time_range)
+
+    def compress(self, data_list):
         try:
-            start_time, end_time, *extra = [
-                        from_current_timezone(
-                                super(DateTimeRangeField, self).to_python(t)
-                            ) 
-                        for t in _time_range
-                    ]
+            start_time, end_time, *extra = data_list
         except (KeyError, ValueError):
             raise ValidationError(_("Expected two valid dates."))
 
@@ -110,7 +112,4 @@ class DateTimeRangeField(fields.BaseTemporalField):
             raise ValidationError(_("Expected exactly two dates."))
 
         return start_time, end_time
-
-    def strptime(self, value, format):
-        return datetime.datetime.strptime(value, format)
 
