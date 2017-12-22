@@ -1,5 +1,5 @@
 $(function() {
-  $('input[name="date_range"]').daterangepicker({
+  $('input[name="time_range"]').daterangepicker({
     timePicker: true,
     timePickerIncrement: 15,
     locale: {

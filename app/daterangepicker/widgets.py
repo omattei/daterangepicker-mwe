@@ -18,7 +18,7 @@ def time_range_validator(time_range):
     if extra: 
         raise ValidationError(_("Expected exactly two dates."))
 
-    now = timezone.now()
+    now = timezone.now().replace(microsecond=0, second=0)
 
     if start_time < now:
         raise ValidationError(_("Start date is in the past."))
@@ -39,17 +39,26 @@ class DateTimeRangeWidget(forms.TextInput):
         self.format = format 
         
     def format_value(self, time_range):
-        fmt = self.format
+        format = self.format
         
+        if isinstance(time_range, str):
+            return time_range
+
         if not time_range:
-            now = timezone.now()
+            now = to_current_timezone(timezone.now())
             start_time, end_time = [now, now]
         else:
-            start_time, end_time, *extra = time_range
+            start_time, end_time, *extra = [
+                        to_current_timezone(t) for t in time_range
+                    ]
+    
+            if extra: 
+                raise ValueError(_("Expected exactly two dates."))
+
 
         return '{} - {}'.format(
-                    start_time.strftime(fmt),
-                    end_time.strftime(fmt),
+                    start_time.strftime(format),
+                    end_time.strftime(format),
                 )
 
     class Media:
@@ -69,11 +78,6 @@ class DateTimeRangeField(fields.BaseTemporalField):
     default_validators = [time_range_validator, ]
 
     def __init__(self, initial=None, **kwargs):
-        now = timezone.now()
-        
-        if initial is None or None in initial:
-            initial = [now, now]
-
         super(DateTimeRangeField, self).__init__(
                     input_formats=[DATETIME_FORMAT,],
                     initial=initial,
@@ -92,12 +96,15 @@ class DateTimeRangeField(fields.BaseTemporalField):
         # 
         # If the list contained more than two strings, these will be placed in
         # the extra list.
-        start_time, end_time, *extra = [
-                    from_current_timezone(
-                            super(DateTimeRangeField, self).to_python(t)
-                        ) 
-                    for t in _time_range
-                ]
+        try:
+            start_time, end_time, *extra = [
+                        from_current_timezone(
+                                super(DateTimeRangeField, self).to_python(t)
+                            ) 
+                        for t in _time_range
+                    ]
+        except (KeyError, ValueError):
+            raise ValidationError(_("Expected two valid dates."))
 
         if extra: 
             raise ValidationError(_("Expected exactly two dates."))
