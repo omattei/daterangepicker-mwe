@@ -6,7 +6,8 @@ from django.utils.formats import localize_input
 from django.forms import ValidationError
 from django.forms.utils import to_current_timezone
 
-from daterangepicker.widgets import time_range_validator, DateTimeRangeWidget
+from daterangepicker.widgets import time_range_validator, \
+        DateTimeRangeWidget, DateTimeRangeField
 
 import datetime
 
@@ -184,5 +185,52 @@ class DateTimeRangeWidgetTestCase(TestCase):
         self.assertLessEqual(diff, datetime.timedelta(minutes=1), 
                 "format_value gave an inaccurate current date/time")
 
+
+class DateTimeRangeFieldTestCase(TestCase):
+    
+    def setUp(self):
+        self.field = DateTimeRangeField()
+
+    def test_init_initial_none(self):
+        """ 
+        Test initializer with no initial start or end times to ensure that
+        subfields are set up properly
+        
+        """
+        field = DateTimeRangeField()
+        self.assertIsNone(field.fields[0].initial)
+        self.assertIsNone(field.fields[1].initial)
+        
+    def test_init_initial_one_only(self):
+        """ 
+        Test initializer with only one initial date/time to ensure that
+        ValueError is raised
+        
+        """
+        with self.assertRaises(ValueError):
+            DateTimeRangeField(initial=[timezone.now()])
+    
+    def test_init_initial_too_many(self):
+        """ 
+        Test initializer with more than 2 initial date/times to ensure that
+        ValueError is raised
+        
+        """
+        now = timezone.now()
+
+        with self.assertRaises(ValueError):
+            DateTimeRangeField(initial=[now, now, now, now])
+
+    def test_init_initial_none(self):
+        """ 
+        Test initializer with two initial start and end times to ensure that
+        subfields are set up properly
+        
+        """
+        now = timezone.now()
+        field = DateTimeRangeField(initial=[now, now])
+        
+        self.assertEqual(field.fields[0].initial, now)
+        self.assertEqual(field.fields[1].initial, now)
 
 
