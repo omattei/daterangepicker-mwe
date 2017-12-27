@@ -16,6 +16,8 @@ import datetime
 HOME_URL = reverse('simpleapp:home')
 CREATE_EVENT_URL = reverse('simpleapp:create_event')
 
+DATETIME_INPUT_FORMAT = '%m/%d/%Y %I:%M %p'
+
 
 def time_range_str(start, end, fmt=settings.DATETIME_FORMAT):
     """ Generate time range strings from a given start and end date/time """
@@ -69,4 +71,77 @@ class HomeTestCase(TestCase):
             self.assertContains(response, 
                     '<strong>{}</strong>'.format(event.title))
             self.assertContains(response, self.time_ranges[i])
+
+    def test_view_create_event(self):
+        """
+        View create event page, but don't post anything
+
+        """
+        client = Client()
+
+        response = client.get(CREATE_EVENT_URL)
+        self.assertTemplateUsed(response, 'simpleapp/create.html')
+
+    def test_post_create_event(self):
+        """
+        Actually create an event using the view
+
+        """
+        client = Client()
+
+        time_range = '{} - {}'.format(
+                    localize_input(
+                            to_current_timezone(self.tomorrow), 
+                            DATETIME_INPUT_FORMAT
+                        ),
+                    localize_input(
+                            to_current_timezone(self.tomorrow_pl1), 
+                            DATETIME_INPUT_FORMAT
+                        )
+                )
+        data = {
+                'title': 'Test Event',
+                'time_range': time_range,
+            }
+        
+        response = client.post(CREATE_EVENT_URL, data)
+        self.assertTemplateUsed(response, 'simpleapp/create.html')
+    
+        self.assertContains(response, 
+                '<strong>Success!</strong> Event has been created.') 
+        self.assertTrue(Event.objects.filter(title='Test Event').exists())
+
+    def test_post_create_even_bad_time(self):
+        """
+        Send bad data to event creation form and see if an event is created or
+        not
+
+        """
+        client = Client()
+
+        time_range = '{} - {}'.format(
+                    localize_input(
+                            to_current_timezone(self.tomorrow_pl1), 
+                            DATETIME_INPUT_FORMAT
+                        ),
+                    localize_input(
+                            to_current_timezone(self.tomorrow), 
+                            DATETIME_INPUT_FORMAT
+                        )
+                )
+        data = {
+                'title': 'Test Event',
+                'time_range': time_range,
+            }
+        
+        response = client.post(CREATE_EVENT_URL, data)
+        self.assertTemplateUsed(response, 'simpleapp/create.html')
+   
+        self.assertContains(response, 'End date is before start date.')
+        self.assertNotContains(response, 
+                '<strong>Success!</strong> Event has been created.') 
+        self.assertFalse(Event.objects.filter(title='Test Event').exists())
+
+
+
 

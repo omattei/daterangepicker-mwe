@@ -7,7 +7,7 @@ from django.utils import timezone
 from django.utils.formats import localize_input
 from django.utils.translation import gettext_lazy as _
 
-DATETIME_FORMAT = '%m/%d/%Y %I:%M %p'
+DATETIME_INPUT_FORMAT = '%m/%d/%Y %I:%M %p'
 
 
 def time_range_validator(time_range):
@@ -33,7 +33,7 @@ class DateTimeRangeWidget(TextInput):
     template_name = 'daterangepicker/forms/widgets/datetimerange.html'
     supports_microseconds = True
 
-    def __init__(self, attrs=None, format=DATETIME_FORMAT):
+    def __init__(self, attrs=None, format=DATETIME_INPUT_FORMAT):
         super(DateTimeRangeWidget, self).__init__(attrs)
         self.format = format 
         
@@ -85,12 +85,12 @@ class DateTimeRangeField(MultiValueField):
         fields = (
                     DateTimeField(
                             initial=initial[0],
-                            input_formats=[DATETIME_FORMAT, ],
+                            input_formats=[DATETIME_INPUT_FORMAT, ],
                             **kwargs,
                         ),
                     DateTimeField(
                             initial=initial[1],
-                            input_formats=[DATETIME_FORMAT, ],
+                            input_formats=[DATETIME_INPUT_FORMAT, ],
                             **kwargs,
                         ),
                 )

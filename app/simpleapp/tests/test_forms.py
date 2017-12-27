@@ -10,7 +10,7 @@ from simpleapp.forms import EventForm
 
 import datetime
 
-DATETIME_FORMAT = '%m/%d/%Y %I:%M %p'
+DATETIME_INPUT_FORMAT = '%m/%d/%Y %I:%M %p'
 
 
 class EventFormTestCase(TestCase):
@@ -67,11 +67,11 @@ class EventFormTestCase(TestCase):
         time_range = '{} - {}'.format(
                     localize_input(
                             to_current_timezone(self.tomorrow), 
-                            DATETIME_FORMAT
+                            DATETIME_INPUT_FORMAT
                         ),
                     localize_input(
                             to_current_timezone(self.tomorrow), 
-                            DATETIME_FORMAT
+                            DATETIME_INPUT_FORMAT
                         )
                 )
         data = {
@@ -93,11 +93,11 @@ class EventFormTestCase(TestCase):
         time_range = '{} - {}'.format(
                     localize_input(
                             to_current_timezone(self.tomorrow), 
-                            DATETIME_FORMAT
+                            DATETIME_INPUT_FORMAT
                         ),
                     localize_input(
                             to_current_timezone(self.tomorrow), 
-                            DATETIME_FORMAT
+                            DATETIME_INPUT_FORMAT
                         )
                 )
         data = {
@@ -124,11 +124,11 @@ class EventFormTestCase(TestCase):
         time_range = '{} - {}'.format(
                     localize_input(
                             to_current_timezone(self.yesterday), 
-                            DATETIME_FORMAT
+                            DATETIME_INPUT_FORMAT
                         ),
                     localize_input(
                             to_current_timezone(self.tomorrow), 
-                            DATETIME_FORMAT
+                            DATETIME_INPUT_FORMAT
                         )
                 )
         data = {

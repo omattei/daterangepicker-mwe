@@ -11,7 +11,7 @@ from daterangepicker.widgets import time_range_validator, \
 
 import datetime
 
-DATETIME_FORMAT = '%m/%d/%Y %I:%M %p'
+DATETIME_INPUT_FORMAT = '%m/%d/%Y %I:%M %p'
 
 
 class TimeRangeValidatorTestCase(TestCase):
@@ -106,18 +106,18 @@ class DateTimeRangeWidgetTestCase(TestCase):
         expect when initialized with the defaults 
         
         """
-        self.assertEqual(self.widget.format, DATETIME_FORMAT)
+        self.assertEqual(self.widget.format, DATETIME_INPUT_FORMAT)
 
     def test_format_value_given_string(self):
         """ Test format_value given an already-correct string """
         time_range = "{} - {}".format( 
                     localize_input(
                             to_current_timezone(self.now), 
-                            DATETIME_FORMAT
+                            DATETIME_INPUT_FORMAT
                         ),
                     localize_input(
                             to_current_timezone(self.now), 
-                            DATETIME_FORMAT
+                            DATETIME_INPUT_FORMAT
                         )
                 )
         
@@ -141,11 +141,11 @@ class DateTimeRangeWidgetTestCase(TestCase):
         expected = "{} - {}".format( 
                     localize_input(
                             to_current_timezone(self.now), 
-                            DATETIME_FORMAT
+                            DATETIME_INPUT_FORMAT
                         ),
                     localize_input(
                             to_current_timezone(self.tomorrow), 
-                            DATETIME_FORMAT
+                            DATETIME_INPUT_FORMAT
                         )
                 )
 
@@ -173,7 +173,7 @@ class DateTimeRangeWidgetTestCase(TestCase):
         self.assertEqual(start, end, 
                 "Start date not equivalent to end date")
 
-        result_datetime = datetime.datetime.strptime(start, DATETIME_FORMAT) 
+        result_datetime = datetime.datetime.strptime(start, DATETIME_INPUT_FORMAT) 
         expected_datetime = to_current_timezone(self.now).replace(second=0,
                 microsecond=0)
 
@@ -240,11 +240,11 @@ class DateTimeRangeFieldTestCase(TestCase):
         time_range = "{} - {}".format( 
                     localize_input(
                             to_current_timezone(self.now), 
-                            DATETIME_FORMAT
+                            DATETIME_INPUT_FORMAT
                         ),
                     localize_input(
                             to_current_timezone(self.now), 
-                            DATETIME_FORMAT
+                            DATETIME_INPUT_FORMAT
                         )
                 )
 
@@ -269,11 +269,11 @@ class DateTimeRangeFieldTestCase(TestCase):
         time_range = "{} - {}".format( 
                     localize_input(
                             to_current_timezone(self.yesterday),
-                            DATETIME_FORMAT
+                            DATETIME_INPUT_FORMAT
                         ),
                     localize_input(
                             to_current_timezone(self.now), 
-                            DATETIME_FORMAT
+                            DATETIME_INPUT_FORMAT
                         )
                 )
 
