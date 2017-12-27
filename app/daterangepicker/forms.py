@@ -5,8 +5,6 @@ from daterangepicker.widgets import DateTimeRangeField
 
 
 class TimeRangedModelForm(ModelForm):
-    time_range = DateTimeRangeField()
-
     class Meta:
         # Since time_range isn't actually a field in the model, exclude it from
         # being saved into the new model instance.
@@ -23,10 +21,15 @@ class TimeRangedModelForm(ModelForm):
         # If we are updating an existing object, make sure the time_range
         # defaults reflect this.
         if 'instance' in kwargs:
-            self.fields['time_range'].initial = [
-                        self.instance.time_start, 
-                        self.instance.time_end,
-                    ]
+            self.fields['time_range'] = DateTimeRangeField(
+                            initial=[
+                                self.instance.time_start, 
+                                self.instance.time_end
+                            ]
+                        )
+        else:
+            self.fields['time_range'] = DateTimeRangeField()
+
 
     def save(self, commit=True):
         """ 
