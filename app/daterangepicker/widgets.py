@@ -10,7 +10,7 @@ DATETIME_FORMAT = '%m/%d/%Y %I:%M %p'
 
 
 def time_range_validator(time_range):
-    """ Validate that a range of two date/timees makes logical sense. """
+    """ Validate that a range of two date/times makes logical sense. """
     start_time, end_time, *extra = time_range
     
     if extra: 
@@ -18,14 +18,11 @@ def time_range_validator(time_range):
 
     now = timezone.now().replace(microsecond=0, second=0)
 
-    if start_time < now:
-        raise ValidationError(_("Start date is in the past."))
-
-    if end_time < now:
-        raise ValidationError(_("End date is in the past."))
-
     if end_time < start_time:
         raise ValidationError(_("End date is before start date."))
+
+    if start_time < now:
+        raise ValidationError(_("Start date is in the past."))
 
 
 class DateTimeRangeWidget(TextInput):
