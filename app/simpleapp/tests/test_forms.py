@@ -3,7 +3,6 @@ from django.test import TestCase
 from django.utils import timezone
 from django.utils.formats import localize_input
 
-from django.forms import ValidationError
 from django.forms.utils import to_current_timezone
 
 from simpleapp.models import Event
@@ -39,7 +38,8 @@ class EventFormTestCase(TestCase):
 
     def test_fields_replaced(self):
         """
-        Test that time_range replaces both time_start and time_end fields in the form 
+        Test that time_range replaces both time_start and time_end fields in
+        the form 
         
         """
         form = EventForm()
@@ -115,5 +115,29 @@ class EventFormTestCase(TestCase):
 
         event.save() 
         self.assertTrue(Event.objects.filter(pk=event.pk).exists())
+
+    def test_save_bad_time_range(self):
+        """
+        Ensure that validations are working on the form for bad time range data 
+        
+        """
+        time_range = '{} - {}'.format(
+                    localize_input(
+                            to_current_timezone(self.yesterday), 
+                            DATETIME_FORMAT
+                        ),
+                    localize_input(
+                            to_current_timezone(self.tomorrow), 
+                            DATETIME_FORMAT
+                        )
+                )
+        data = {
+                'title': 'Test Event',
+                'time_range': time_range,
+            }
+
+        form = EventForm(data)
+
+        self.assertFalse(form.is_valid())
 
 

@@ -30,7 +30,6 @@ class TimeRangedModelForm(ModelForm):
         else:
             self.fields['time_range'] = DateTimeRangeField()
 
-
     def save(self, commit=True):
         """ 
         Extend saving such that time_start and time_end values are manually

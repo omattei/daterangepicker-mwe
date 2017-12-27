@@ -224,7 +224,7 @@ class DateTimeRangeFieldTestCase(TestCase):
                         initial=[self.now, self.now, self.now, self.now],
                     )
 
-    def test_init_initial_none(self):
+    def test_init_two_values(self):
         """ 
         Test initializer with two initial start and end times to ensure that
         subfields are set up properly
@@ -268,7 +268,7 @@ class DateTimeRangeFieldTestCase(TestCase):
         """
         time_range = "{} - {}".format( 
                     localize_input(
-                            to_current_timezone(self.now - datetime.timedelta(days=1)), 
+                            to_current_timezone(self.yesterday),
                             DATETIME_FORMAT
                         ),
                     localize_input(
