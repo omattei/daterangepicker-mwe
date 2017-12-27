@@ -201,9 +201,8 @@ class DateTimeRangeFieldTestCase(TestCase):
         subfields are set up properly
         
         """
-        field = DateTimeRangeField()
-        self.assertIsNone(field.fields[0].initial)
-        self.assertIsNone(field.fields[1].initial)
+        self.assertIsNone(self.field.fields[0].initial)
+        self.assertIsNone(self.field.fields[1].initial)
         
     def test_init_initial_one_only(self):
         """ 
