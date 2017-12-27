@@ -191,6 +191,9 @@ class DateTimeRangeFieldTestCase(TestCase):
     def setUp(self):
         self.field = DateTimeRangeField()
         self.now = timezone.now()
+        
+        self.yesterday = self.now - datetime.timedelta(hours=24)
+        self.tomorrow = self.now + datetime.timedelta(hours=24)
 
     def test_init_initial_none(self):
         """ 
@@ -277,4 +280,38 @@ class DateTimeRangeFieldTestCase(TestCase):
 
         with self.assertRaises(ValidationError):
             self.field.clean(time_range)
+
+    def test_compress_one_only(self):
+        """ Test compress method with only one date/time """ 
+        time_range = [self.tomorrow]
+        
+        with self.assertRaises(ValidationError):
+            self.field.compress(time_range)
+
+    def test_compress_two_correct(self):
+        """ Test compress method with two correct date/times """
+        time_range = [self.tomorrow, self.tomorrow]
+        
+        self.assertEqual(self.field.compress(time_range), tuple(time_range))
+
+    def test_compress_two_incorrect(self):
+        """
+        Test compress method with two incorrect date/times.
+        
+        Result should be virtually the same as if both date/times were correct,
+        as compress does not perform any validation. 
+        
+        """
+        time_range = [self.yesterday, self.now]
+        
+        self.assertEqual(self.field.compress(time_range), tuple(time_range))
+
+    def test_compress_too_many(self):
+        """ Test compress method with more than 2 date/times """ 
+        time_range = [self.tomorrow, self.tomorrow, 
+                      self.tomorrow, self.tomorrow]
+        
+        with self.assertRaises(ValidationError):
+            self.field.compress(time_range)
+
 
