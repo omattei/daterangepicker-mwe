@@ -4,6 +4,7 @@ from django.forms.fields import DateTimeField, MultiValueField
 from django.forms.utils import to_current_timezone
 
 from django.utils import timezone
+from django.utils.formats import localize_input
 from django.utils.translation import gettext_lazy as _
 
 DATETIME_FORMAT = '%m/%d/%Y %I:%M %p'
@@ -54,8 +55,8 @@ class DateTimeRangeWidget(TextInput):
                 raise ValueError(_("Expected exactly two dates."))
 
         return '{} - {}'.format(
-                    start_time.strftime(format),
-                    end_time.strftime(format),
+                    localize_input(start_time, format),
+                    localize_input(end_time, format)
                 )
 
     class Media:
