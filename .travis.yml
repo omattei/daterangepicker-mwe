@@ -1,0 +1,19 @@
+language: python
+
+python: "3"
+
+install:
+  - pip3 install -r requirements.txt
+
+before_script: 
+  - cd app/
+  - python3 manage.py makemigrations simpleapp 
+
+script: 
+  - coverage run --rcfile=../.coveragerc --source='.' manage.py test
+
+after_success:
+  # This only works with public repos
+  - codecov
+
+sudo: false
