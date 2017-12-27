@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/omattei/daterangepicker-mwe.svg?branch=master)](https://travis-ci.org/omattei/daterangepicker-mwe)
+
 # Description
 A minimum working example (MWE) for a Django 2.0+ date/time range picker for
 use with the Cville Pride events project (currently closed-source).
