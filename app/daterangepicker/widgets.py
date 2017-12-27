@@ -11,8 +11,11 @@ DATETIME_FORMAT = '%m/%d/%Y %I:%M %p'
 
 def time_range_validator(time_range):
     """ Validate that a range of two date/times makes logical sense. """
-    start_time, end_time, *extra = time_range
-    
+    try:
+        start_time, end_time, *extra = time_range
+    except ValueError:
+        raise ValidationError(_("Expected more than one date."))
+
     if extra: 
         raise ValidationError(_("Expected exactly two dates."))
 

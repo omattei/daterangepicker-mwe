@@ -17,6 +17,27 @@ class TimeRangeValidatorTestCase(TestCase):
         self.yesterday = self.today - datetime.timedelta(hours=24)
         self.tomorrow = self.today + datetime.timedelta(hours=24)
 
+    def test_bad_time_range_string(self):
+        """ Test an improperly formatted time range (string) """
+        time_range = "yo momma"
+        
+        with self.assertRaises(ValidationError):
+            time_range_validator(time_range)    
+
+    def test_bad_time_range_shorter(self):
+        """ Test an improperly formatted time range (list with 1 date)"""
+        time_range = [self.today]
+        
+        with self.assertRaises(ValidationError):
+            time_range_validator(time_range)    
+
+    def test_bad_time_range_longer(self):
+        """ Test an improperly formatted time range (list with >2 dates) """
+        time_range = [self.today, self.today, self.today, self.today]
+        
+        with self.assertRaises(ValidationError):
+            time_range_validator(time_range)    
+
     def test_early_start(self):
         """ Test time_range_validator with a start date in the past """
         time_range = [self.yesterday, self.today]
