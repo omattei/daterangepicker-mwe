@@ -97,8 +97,8 @@ class DateTimeRangeField(MultiValueField):
 
         super(DateTimeRangeField, self).__init__(fields, **kwargs)
 
-    def clean(self, value):
-        _time_range = value.strip().split(' - ')
+    def clean(self, time_range):
+        _time_range = time_range.split(' - ')
 
         return super(DateTimeRangeField, self).clean(_time_range)
 

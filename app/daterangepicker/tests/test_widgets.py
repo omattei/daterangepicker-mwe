@@ -190,6 +190,7 @@ class DateTimeRangeFieldTestCase(TestCase):
     
     def setUp(self):
         self.field = DateTimeRangeField()
+        self.now = timezone.now()
 
     def test_init_initial_none(self):
         """ 
@@ -208,7 +209,7 @@ class DateTimeRangeFieldTestCase(TestCase):
         
         """
         with self.assertRaises(ValueError):
-            DateTimeRangeField(initial=[timezone.now()])
+            DateTimeRangeField(initial=[self.now])
     
     def test_init_initial_too_many(self):
         """ 
@@ -216,10 +217,10 @@ class DateTimeRangeFieldTestCase(TestCase):
         ValueError is raised
         
         """
-        now = timezone.now()
-
         with self.assertRaises(ValueError):
-            DateTimeRangeField(initial=[now, now, now, now])
+            DateTimeRangeField(
+                        initial=[self.now, self.now, self.now, self.now],
+                    )
 
     def test_init_initial_none(self):
         """ 
@@ -227,10 +228,53 @@ class DateTimeRangeFieldTestCase(TestCase):
         subfields are set up properly
         
         """
-        now = timezone.now()
-        field = DateTimeRangeField(initial=[now, now])
+        field = DateTimeRangeField(initial=[self.now, self.now])
         
-        self.assertEqual(field.fields[0].initial, now)
-        self.assertEqual(field.fields[1].initial, now)
+        self.assertEqual(field.fields[0].initial, self.now)
+        self.assertEqual(field.fields[1].initial, self.now)
 
+    def test_clean_valid_string(self):
+        """ Test clean method with a valid time_range string """
+        time_range = "{} - {}".format( 
+                    localize_input(
+                            to_current_timezone(self.now), 
+                            DATETIME_FORMAT
+                        ),
+                    localize_input(
+                            to_current_timezone(self.now), 
+                            DATETIME_FORMAT
+                        )
+                )
+
+        self.field.clean(time_range)
+
+    def test_clean_invalid_string(self):
+        """ Test clean method with an invalid time_range string """
+        time_range = "yo momma"
+
+        with self.assertRaises(ValidationError):
+            self.field.clean(time_range)
+
+    def test_clean_invalid_range(self):
+        """ 
+        Test clean method with an illogical time_range that is still a
+        "valid" string to ensure it raises an error.
+        
+        This will test that the default_validators are being run, and thus our
+        pre-tested time_range_validator.
+        
+        """
+        time_range = "{} - {}".format( 
+                    localize_input(
+                            to_current_timezone(self.now - datetime.timedelta(days=1)), 
+                            DATETIME_FORMAT
+                        ),
+                    localize_input(
+                            to_current_timezone(self.now), 
+                            DATETIME_FORMAT
+                        )
+                )
+
+        with self.assertRaises(ValidationError):
+            self.field.clean(time_range)
 
