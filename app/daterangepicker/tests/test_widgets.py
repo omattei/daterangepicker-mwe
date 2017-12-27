@@ -50,7 +50,10 @@ class TimeRangeValidatorTestCase(TestCase):
             time_range_validator(time_range)    
     
     def test_soon_start(self):
-        """ Test time_range_validator with a start date in the very near future """
+        """ 
+        Test time_range_validator with a start date in the very near future 
+       
+        """
         time_range = [self.today, self.today]
         
         time_range_validator(time_range)    
@@ -69,14 +72,20 @@ class TimeRangeValidatorTestCase(TestCase):
             time_range_validator(time_range)    
 
     def test_end_before_start(self):
-        """ Test time_range_validator with an end date before the start date """
+        """
+        Test time_range_validator with an end date before the start date 
+        
+        """
         time_range = [self.today, self.yesterday]
         
         with self.assertRaises(ValidationError):
             time_range_validator(time_range)    
 
     def test_end_after_start(self):
-        """ Test time_range_validator with an end date after the start date """
+        """
+        Test time_range_validator with an end date after the start date 
+        
+        """
         time_range = [self.today, self.tomorrow]
         
         time_range_validator(time_range)    
@@ -90,11 +99,25 @@ class DateTimeRangeWidgetTestCase(TestCase):
         self.now = timezone.now()
         self.tomorrow = self.now + datetime.timedelta(hours=24)
 
+    def test_widget_init_format(self):
+        """
+        Test that the DateTimeRangeWidget's datetime format is what we
+        expect when initialized with the defaults 
+        
+        """
+        self.assertEqual(self.widget.format, DATETIME_FORMAT)
+
     def test_format_value_given_string(self):
         """ Test format_value given an already-correct string """
         time_range = "{} - {}".format( 
-                    localize_input(to_current_timezone(self.now), DATETIME_FORMAT),
-                    localize_input(to_current_timezone(self.now), DATETIME_FORMAT)
+                    localize_input(
+                            to_current_timezone(self.now), 
+                            DATETIME_FORMAT
+                        ),
+                    localize_input(
+                            to_current_timezone(self.now), 
+                            DATETIME_FORMAT
+                        )
                 )
         
         self.assertEqual(self.widget.format_value(time_range), time_range)
@@ -107,12 +130,22 @@ class DateTimeRangeWidgetTestCase(TestCase):
             self.widget.format_value(time_range)
 
     def test_format_value_time_range_correct(self):
-        """ Test format value with a time_range containing two dates in the near future """
+        """ 
+        Test format value with a time_range containing two dates in the
+        near future 
+        
+        """
         time_range = [self.now, self.tomorrow]
 
         expected = "{} - {}".format( 
-                    localize_input(to_current_timezone(self.now), DATETIME_FORMAT),
-                    localize_input(to_current_timezone(self.tomorrow), DATETIME_FORMAT)
+                    localize_input(
+                            to_current_timezone(self.now), 
+                            DATETIME_FORMAT
+                        ),
+                    localize_input(
+                            to_current_timezone(self.tomorrow), 
+                            DATETIME_FORMAT
+                        )
                 )
 
         self.assertEqual(self.widget.format_value(time_range), expected)
@@ -146,7 +179,7 @@ class DateTimeRangeWidgetTestCase(TestCase):
         diff = result_datetime - expected_datetime
 
         self.assertGreaterEqual(result_datetime, expected_datetime,
-                "format_value gave current date/time earlier than it actually was")
+                "format_value gave current date/time earlier than expected")
 
         self.assertLessEqual(diff, datetime.timedelta(minutes=1), 
                 "format_value gave an inaccurate current date/time")
