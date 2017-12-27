@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.org/omattei/daterangepicker-mwe.svg?branch=master)](https://travis-ci.org/omattei/daterangepicker-mwe)
+[![codecov](https://codecov.io/gh/omattei/daterangepicker-mwe/branch/master/graph/badge.svg)](https://codecov.io/gh/omattei/daterangepicker-mwe)
 
 # Description
 A minimum working example (MWE) for a Django 2.0+ date/time range picker for
