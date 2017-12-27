@@ -32,23 +32,24 @@ class HomeTestCase(TestCase):
         self.tomorrow_pl1 = timezone.now() + datetime.timedelta(hours=48)
         self.tomorrow_pl2 = timezone.now() + datetime.timedelta(hours=72)
         
-        self.event1 = Event.objects.create(
+        self.events = [
+                Event.objects.create(
                         title="Test Event1",
                         time_start=self.tomorrow,
                         time_end=self.tomorrow,
-                    )
-        self.event2 = Event.objects.create(
+                    ),
+                Event.objects.create(
                         title="Test Event2",
                         time_start=self.tomorrow_pl1,
                         time_end=self.tomorrow_pl2,
-                    )
-        self.event3 = Event.objects.create(
+                    ),
+                Event.objects.create(
                         title="Test Event3",
                         time_start=self.tomorrow,
                         time_end=self.tomorrow_pl2,
                     )
-        
-        self.events = [self.event1, self.event2, self.event3]
+            ]
+
         self.time_ranges = [
                     time_range_str(e.time_start, e.time_end) 
                     for e in self.events
