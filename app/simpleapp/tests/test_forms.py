@@ -1,16 +1,13 @@
 # File: simpleapp/tests/test_forms.py
 from django.test import TestCase
 from django.utils import timezone
-from django.utils.formats import localize_input
-
-from django.forms.utils import to_current_timezone
 
 from simpleapp.models import Event
 from simpleapp.forms import EventForm
 
-import datetime
+from daterangepicker.forms import time_range_str
 
-DATETIME_INPUT_FORMAT = '%m/%d/%Y %I:%M %p'
+import datetime
 
 
 class EventFormTestCase(TestCase):
@@ -64,16 +61,7 @@ class EventFormTestCase(TestCase):
 
     def test_save_commit(self):
         """ Test saving a form to database """
-        time_range = '{} - {}'.format(
-                    localize_input(
-                            to_current_timezone(self.tomorrow), 
-                            DATETIME_INPUT_FORMAT
-                        ),
-                    localize_input(
-                            to_current_timezone(self.tomorrow), 
-                            DATETIME_INPUT_FORMAT
-                        )
-                )
+        time_range = time_range_str(self.tomorrow, self.tomorrow)
         data = {
                 'title': 'Test Event',
                 'time_range': time_range,
@@ -90,16 +78,7 @@ class EventFormTestCase(TestCase):
     
     def test_save_no_commit(self):
         """ Test saving a form without committing directly to database """
-        time_range = '{} - {}'.format(
-                    localize_input(
-                            to_current_timezone(self.tomorrow), 
-                            DATETIME_INPUT_FORMAT
-                        ),
-                    localize_input(
-                            to_current_timezone(self.tomorrow), 
-                            DATETIME_INPUT_FORMAT
-                        )
-                )
+        time_range = time_range_str(self.tomorrow, self.tomorrow)
         data = {
                 'title': 'Test Event',
                 'time_range': time_range,
@@ -121,16 +100,7 @@ class EventFormTestCase(TestCase):
         Ensure that validations are working on the form for bad time range data 
         
         """
-        time_range = '{} - {}'.format(
-                    localize_input(
-                            to_current_timezone(self.yesterday), 
-                            DATETIME_INPUT_FORMAT
-                        ),
-                    localize_input(
-                            to_current_timezone(self.tomorrow), 
-                            DATETIME_INPUT_FORMAT
-                        )
-                )
+        time_range = time_range_str(self.yesterday, self.tomorrow)
         data = {
                 'title': 'Test Event',
                 'time_range': time_range,

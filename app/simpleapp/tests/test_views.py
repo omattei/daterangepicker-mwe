@@ -1,30 +1,17 @@
 # File: simpleapp/tests/test_views.py
 from django.test import TestCase, Client
 from django.urls import reverse
-from django.conf import settings
 
 from django.utils import timezone
-from django.utils.dateformat import format
-from django.utils.formats import localize_input
-
-from django.forms.utils import to_current_timezone
 
 from simpleapp.models import Event
+
+from daterangepicker.forms import time_range_str
 
 import datetime
 
 HOME_URL = reverse('simpleapp:home')
 CREATE_EVENT_URL = reverse('simpleapp:create_event')
-
-DATETIME_INPUT_FORMAT = '%m/%d/%Y %I:%M %p'
-
-
-def time_range_str(start, end, fmt=settings.DATETIME_FORMAT):
-    """ Generate time range strings from a given start and end date/time """
-    return '{} &ndash; {}'.format(
-                format(to_current_timezone(start), fmt),
-                format(to_current_timezone(end), fmt),
-            )
 
 
 class HomeTestCase(TestCase):
@@ -53,7 +40,7 @@ class HomeTestCase(TestCase):
             ]
 
         self.time_ranges = [
-                    time_range_str(e.time_start, e.time_end) 
+                    time_range_str(e.time_start, e.time_end, html=True) 
                     for e in self.events
                 ]
 
@@ -88,17 +75,8 @@ class HomeTestCase(TestCase):
 
         """
         client = Client()
-
-        time_range = '{} - {}'.format(
-                    localize_input(
-                            to_current_timezone(self.tomorrow), 
-                            DATETIME_INPUT_FORMAT
-                        ),
-                    localize_input(
-                            to_current_timezone(self.tomorrow_pl1), 
-                            DATETIME_INPUT_FORMAT
-                        )
-                )
+        
+        time_range = time_range_str(self.tomorrow, self.tomorrow_pl1)
         data = {
                 'title': 'Test Event',
                 'time_range': time_range,
@@ -119,16 +97,7 @@ class HomeTestCase(TestCase):
         """
         client = Client()
 
-        time_range = '{} - {}'.format(
-                    localize_input(
-                            to_current_timezone(self.tomorrow_pl1), 
-                            DATETIME_INPUT_FORMAT
-                        ),
-                    localize_input(
-                            to_current_timezone(self.tomorrow), 
-                            DATETIME_INPUT_FORMAT
-                        )
-                )
+        time_range = time_range_str(self.tomorrow_pl1, self.tomorrow)
         data = {
                 'title': 'Test Event',
                 'time_range': time_range,

@@ -1,11 +1,11 @@
 # File: daterangepicker/tests/test_widgets.py
 from django.test import TestCase
 from django.utils import timezone
-from django.utils.formats import localize_input
 
 from django.forms import ValidationError
 from django.forms.utils import to_current_timezone
 
+from daterangepicker.forms import time_range_str
 from daterangepicker.widgets import time_range_validator, \
         DateTimeRangeWidget, DateTimeRangeField
 
@@ -110,16 +110,7 @@ class DateTimeRangeWidgetTestCase(TestCase):
 
     def test_format_value_given_string(self):
         """ Test format_value given an already-correct string """
-        time_range = "{} - {}".format( 
-                    localize_input(
-                            to_current_timezone(self.now), 
-                            DATETIME_INPUT_FORMAT
-                        ),
-                    localize_input(
-                            to_current_timezone(self.now), 
-                            DATETIME_INPUT_FORMAT
-                        )
-                )
+        time_range = time_range_str(self.now, self.now)
         
         self.assertEqual(self.widget.format_value(time_range), time_range)
 
@@ -137,17 +128,7 @@ class DateTimeRangeWidgetTestCase(TestCase):
         
         """
         time_range = [self.now, self.tomorrow]
-
-        expected = "{} - {}".format( 
-                    localize_input(
-                            to_current_timezone(self.now), 
-                            DATETIME_INPUT_FORMAT
-                        ),
-                    localize_input(
-                            to_current_timezone(self.tomorrow), 
-                            DATETIME_INPUT_FORMAT
-                        )
-                )
+        expected = time_range_str(self.now, self.tomorrow)
 
         self.assertEqual(self.widget.format_value(time_range), expected)
 
@@ -173,7 +154,8 @@ class DateTimeRangeWidgetTestCase(TestCase):
         self.assertEqual(start, end, 
                 "Start date not equivalent to end date")
 
-        result_datetime = datetime.datetime.strptime(start, DATETIME_INPUT_FORMAT) 
+        result_datetime = datetime.datetime.strptime(start, 
+                DATETIME_INPUT_FORMAT) 
         expected_datetime = to_current_timezone(self.now).replace(second=0,
                 microsecond=0)
 
@@ -237,16 +219,7 @@ class DateTimeRangeFieldTestCase(TestCase):
 
     def test_clean_valid_string(self):
         """ Test clean method with a valid time_range string """
-        time_range = "{} - {}".format( 
-                    localize_input(
-                            to_current_timezone(self.now), 
-                            DATETIME_INPUT_FORMAT
-                        ),
-                    localize_input(
-                            to_current_timezone(self.now), 
-                            DATETIME_INPUT_FORMAT
-                        )
-                )
+        time_range = time_range_str(self.now, self.now)
 
         self.field.clean(time_range)
 
@@ -266,16 +239,7 @@ class DateTimeRangeFieldTestCase(TestCase):
         pre-tested time_range_validator.
         
         """
-        time_range = "{} - {}".format( 
-                    localize_input(
-                            to_current_timezone(self.yesterday),
-                            DATETIME_INPUT_FORMAT
-                        ),
-                    localize_input(
-                            to_current_timezone(self.now), 
-                            DATETIME_INPUT_FORMAT
-                        )
-                )
+        time_range = time_range_str(self.yesterday, self.now)
 
         with self.assertRaises(ValidationError):
             self.field.clean(time_range)
