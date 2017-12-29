@@ -9,7 +9,7 @@ from django.forms.utils import to_current_timezone
 DATETIME_INPUT_FORMAT = '%m/%d/%Y %I:%M %p'
 
 
-def time_range_str(start, end, html=False):
+def time_range_generator(start, end, html=False):
     """ 
     Generate time range strings from a given start and end date/time. 
     
@@ -32,9 +32,14 @@ def time_range_str(start, end, html=False):
     # The string format to be used by the date/time formatter function
     fmt_str = settings.DATETIME_FORMAT if html else DATETIME_INPUT_FORMAT
 
-    return '{}{}{}'.format(
-                datetime_fmtr_func(to_current_timezone(start), fmt_str),
-                separator,
-                datetime_fmtr_func(to_current_timezone(end), fmt_str),
+    return separator.join(
+                [
+                    datetime_fmtr_func(
+                            to_current_timezone(start), fmt_str
+                        ),
+                    datetime_fmtr_func(
+                            to_current_timezone(end), fmt_str
+                        ),
+                ]
             )
 

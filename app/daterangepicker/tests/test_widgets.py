@@ -5,89 +5,12 @@ from django.utils import timezone
 from django.forms import ValidationError
 from django.forms.utils import to_current_timezone
 
-from daterangepicker.forms import time_range_str, DATETIME_INPUT_FORMAT
-from daterangepicker.widgets import time_range_validator, \
-        DateTimeRangeWidget, DateTimeRangeField
+from django.utils.formats import localize_input
+
+from daterangepicker.forms import time_range_generator, DATETIME_INPUT_FORMAT
+from daterangepicker.widgets import DateTimeRangeWidget, DateTimeRangeField
 
 import datetime
-
-
-class TimeRangeValidatorTestCase(TestCase):
-
-    def setUp(self):
-        self.today = timezone.now() + datetime.timedelta(minutes=1)
-        
-        self.yesterday = self.today - datetime.timedelta(hours=24)
-        self.tomorrow = self.today + datetime.timedelta(hours=24)
-
-    def test_bad_time_range_string(self):
-        """ Test an improperly formatted time range (string) """
-        time_range = "yo momma"
-        
-        with self.assertRaises(ValidationError):
-            time_range_validator(time_range)    
-
-    def test_bad_time_range_shorter(self):
-        """ Test an improperly formatted time range (tuple with 1 date)"""
-        time_range = (self.today, )
-        
-        with self.assertRaises(ValidationError):
-            time_range_validator(time_range)    
-
-    def test_bad_time_range_longer(self):
-        """ Test an improperly formatted time range (tuple with >2 dates) """
-        time_range = (self.today, self.today, self.today, self.today)
-        
-        with self.assertRaises(ValidationError):
-            time_range_validator(time_range)    
-
-    def test_early_start(self):
-        """ Test time_range_validator with a start date in the past """
-        time_range = (self.yesterday, self.today)
-        
-        with self.assertRaises(ValidationError):
-            time_range_validator(time_range)    
-    
-    def test_soon_start(self):
-        """ 
-        Test time_range_validator with a start date in the very near future 
-       
-        """
-        time_range = (self.today, self.today)
-        
-        time_range_validator(time_range)    
-
-    def test_late_start(self):
-        """ Test time_range_validator with a start date in the future """
-        time_range = (self.tomorrow, self.tomorrow)
-        
-        time_range_validator(time_range)    
-
-    def test_early_end(self):
-        """ Test time_range_validator with an end date in the past """
-        time_range = (self.yesterday, self.yesterday)
-        
-        with self.assertRaises(ValidationError):
-            time_range_validator(time_range)    
-
-    def test_end_before_start(self):
-        """
-        Test time_range_validator with an end date before the start date 
-        
-        """
-        time_range = (self.today, self.yesterday)
-        
-        with self.assertRaises(ValidationError):
-            time_range_validator(time_range)    
-
-    def test_end_after_start(self):
-        """
-        Test time_range_validator with an end date after the start date 
-        
-        """
-        time_range = (self.today, self.tomorrow)
-        
-        time_range_validator(time_range)    
 
 
 class DateTimeRangeWidgetTestCase(TestCase):
@@ -100,7 +23,7 @@ class DateTimeRangeWidgetTestCase(TestCase):
 
     def test_format_value_given_string(self):
         """ Test format_value given an already-correct string """
-        time_range = time_range_str(self.now, self.now)
+        time_range = time_range_generator(self.now, self.now)
         
         self.assertEqual(self.widget.format_value(time_range), time_range)
 
@@ -118,7 +41,7 @@ class DateTimeRangeWidgetTestCase(TestCase):
         
         """
         time_range = (self.now, self.tomorrow)
-        expected = time_range_str(self.now, self.tomorrow)
+        expected = time_range_generator(self.now, self.tomorrow)
 
         self.assertEqual(self.widget.format_value(time_range), expected)
     
@@ -294,7 +217,7 @@ class DateTimeRangeFieldTestCase(TestCase):
 
     def test_clean_valid_string(self):
         """ Test clean method with a valid time_range string """
-        time_range = time_range_str(self.now, self.now)
+        time_range = time_range_generator(self.now, self.now)
 
         self.field.clean(time_range)
 
@@ -310,11 +233,8 @@ class DateTimeRangeFieldTestCase(TestCase):
         Test clean method with an illogical time_range that is still a
         "valid" string to ensure it raises an error.
         
-        This will test that the default_validators are being run, and thus our
-        pre-tested time_range_validator.
-        
         """
-        time_range = time_range_str(self.yesterday, self.now)
+        time_range = time_range_generator(self.yesterday, self.now)
 
         with self.assertRaises(ValidationError):
             self.field.clean(time_range)
@@ -352,4 +272,92 @@ class DateTimeRangeFieldTestCase(TestCase):
         with self.assertRaises(ValidationError):
             self.field.compress(time_range)
 
+
+class TimeRangeValidatorTestCase(TestCase):
+
+    def setUp(self):
+        self.field = DateTimeRangeField()
+        
+        self.today = timezone.now() + datetime.timedelta(minutes=1)
+        
+        self.yesterday = self.today - datetime.timedelta(hours=24)
+        self.tomorrow = self.today + datetime.timedelta(hours=24)
+
+    def test_bad_time_range_string(self):
+        """ Test an improperly formatted time range (arbitrary string) """
+        time_range_str = "yo momma"
+        
+        with self.assertRaises(ValidationError):
+            self.field.clean(time_range_str)
+    
+    def test_bad_time_range_shorter(self):
+        """ Test an improperly formatted time range (single date)"""
+        time_range_str = localize_input(
+                            to_current_timezone(self.today), 
+                            DATETIME_INPUT_FORMAT
+                        )
+        
+        with self.assertRaises(ValidationError):
+            self.field.clean(time_range_str)
+
+    def test_bad_time_range_longer(self):
+        """ Test an improperly formatted time range (tuple with >2 dates) """
+        time_range = [
+                        localize_input(
+                                to_current_timezone(self.today), 
+                                DATETIME_INPUT_FORMAT
+                            ), 
+                    ] * 4
+        time_range_str = " - ".join(time_range)
+        
+        with self.assertRaises(ValidationError):
+            self.field.clean(time_range_str)
+
+    def test_early_start(self):
+        """ Test time_range_validator with a start date in the past """
+        time_range_str = time_range_generator(self.yesterday, self.today)
+        
+        with self.assertRaises(ValidationError):
+            self.field.clean(time_range_str)
+    
+    def test_soon_start(self):
+        """ 
+        Test time_range_validator with a start date in the very near future 
+       
+        """
+        time_range_str = time_range_generator(self.today, self.today)
+        
+        self.field.clean(time_range_str)
+
+    def test_late_start(self):
+        """ Test time_range_validator with a start date in the future """
+        time_range_str = time_range_generator(self.tomorrow, self.tomorrow)
+        
+        self.field.clean(time_range_str)
+
+    def test_early_end(self):
+        """ Test time_range_validator with an end date in the past """
+        time_range_str = time_range_generator(self.yesterday, self.yesterday)
+        
+        with self.assertRaises(ValidationError):
+            self.field.clean(time_range_str)
+
+    def test_end_before_start(self):
+        """
+        Test time_range_validator with an end date before the start date 
+        
+        """
+        time_range_str = time_range_generator(self.today, self.yesterday)
+        
+        with self.assertRaises(ValidationError):
+            self.field.clean(time_range_str)
+
+    def test_end_after_start(self):
+        """
+        Test time_range_validator with an end date after the start date 
+        
+        """
+        time_range_str = time_range_generator(self.today, self.tomorrow)
+        
+        self.field.clean(time_range_str)
 

@@ -6,7 +6,7 @@ from django.utils import timezone
 
 from simpleapp.models import Event
 
-from daterangepicker.forms import time_range_str
+from daterangepicker.forms import time_range_generator
 
 import datetime
 
@@ -40,7 +40,7 @@ class HomeTestCase(TestCase):
             ]
 
         self.time_ranges = [
-                    time_range_str(e.time_start, e.time_end, html=True) 
+                    time_range_generator(e.time_start, e.time_end, html=True) 
                     for e in self.events
                 ]
 
@@ -76,7 +76,7 @@ class HomeTestCase(TestCase):
         """
         client = Client()
         
-        time_range = time_range_str(self.tomorrow, self.tomorrow_pl1)
+        time_range = time_range_generator(self.tomorrow, self.tomorrow_pl1)
         data = {
                 'title': 'Test Event',
                 'time_range': time_range,
@@ -97,7 +97,7 @@ class HomeTestCase(TestCase):
         """
         client = Client()
 
-        time_range = time_range_str(self.tomorrow_pl1, self.tomorrow)
+        time_range = time_range_generator(self.tomorrow_pl1, self.tomorrow)
         data = {
                 'title': 'Test Event',
                 'time_range': time_range,

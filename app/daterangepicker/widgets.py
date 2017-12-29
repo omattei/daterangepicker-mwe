@@ -6,28 +6,9 @@ from django.forms.utils import to_current_timezone
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
-from daterangepicker.utils import DATETIME_INPUT_FORMAT, time_range_str
+from daterangepicker.utils import DATETIME_INPUT_FORMAT, time_range_generator
 
 import datetime
-
-
-def time_range_validator(time_range):
-    """ Validate that a range of two date/times makes logical sense. """
-    try:
-        start_time, end_time, *extra = time_range
-    except ValueError:
-        raise ValidationError(_("Expected more than one date."))
-
-    if extra: 
-        raise ValidationError(_("Expected exactly two dates."))
-
-    now = timezone.now().replace(microsecond=0, second=0)
-
-    if end_time < start_time:
-        raise ValidationError(_("End date is before start date."))
-
-    if start_time < now:
-        raise ValidationError(_("Start date is in the past."))
 
 
 class DateTimeRangeWidget(TextInput):
@@ -72,7 +53,7 @@ class DateTimeRangeWidget(TextInput):
             if extra: 
                 raise ValueError(_("Expected exactly two dates."))
 
-        return time_range_str(start_time, end_time)
+        return time_range_generator(start_time, end_time)
 
     class Media:
         css = {
@@ -88,7 +69,9 @@ class DateTimeRangeWidget(TextInput):
 
 class DateTimeRangeField(MultiValueField):
     widget = DateTimeRangeWidget
-    default_validators = [time_range_validator, ]
+
+    # Allow a time_range to be in the past. Can be overriden in subclasses.
+    allow_past = False
 
     def __init__(self, initial=None, **kwargs):
         if initial is None:
@@ -114,10 +97,34 @@ class DateTimeRangeField(MultiValueField):
         super(DateTimeRangeField, self).__init__(
                 fields, initial=initial, **kwargs)
     
-    def clean(self, time_range):
-        _time_range = time_range.split(' - ')
+    def clean(self, time_range_str):
+        try:
+            time_range_tokens = time_range_str.split(' - ')
 
-        return super(DateTimeRangeField, self).clean(_time_range)
+            start_time_str, end_time_str, *extra = time_range_tokens
+            
+            if extra: 
+                raise ValidationError(_("Expected exactly two dates."))
+        
+        except ValueError:
+            raise ValidationError(_("Expected more than one date."))
+    
+        start_time, end_time = super(DateTimeRangeField, self).clean(
+                                        (start_time_str, end_time_str)
+                                    )
+
+        # Validate that a range of two date/times makes logical sense. 
+        if end_time < start_time:
+            raise ValidationError(_("End date is before start date."))
+
+        if not self.allow_past:
+            now = timezone.now().replace(microsecond=0, second=0)
+
+            # Validate that a range of two date/times is not in the past. 
+            if start_time < now:
+                raise ValidationError(_("Start date is in the past."))
+
+        return start_time, end_time
 
     def compress(self, data_list):
         try:

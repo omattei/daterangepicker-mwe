@@ -2,12 +2,12 @@
 from django.forms import ModelForm
 
 from daterangepicker import utils
-from daterangepicker.utils import DATETIME_INPUT_FORMAT, time_range_str
+from daterangepicker.utils import DATETIME_INPUT_FORMAT, time_range_generator
 
 from daterangepicker.widgets import DateTimeRangeField
 
 __all__ = ['TimeRangedModelForm', 'utils', 
-           'DATETIME_INPUT_FORMAT', 'time_range_str']
+           'DATETIME_INPUT_FORMAT', 'time_range_generator']
 
 
 class TimeRangedModelForm(ModelForm):
