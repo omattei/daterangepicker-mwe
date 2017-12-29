@@ -47,6 +47,7 @@ class TimeRangedModelForm(ModelForm):
         
         if commit:
             self.instance.save()
+            self.save_m2m()
 
         return self.instance
 
