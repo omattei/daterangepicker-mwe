@@ -5,7 +5,7 @@ from daterangepicker.forms import TimeRangedModelForm
 
 
 class EventForm(TimeRangedModelForm):
-
     class Meta:
         model = Event
-        fields = ['title', ]
+        fields = '__all__'
+

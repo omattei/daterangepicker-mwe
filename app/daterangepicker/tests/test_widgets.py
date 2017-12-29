@@ -5,13 +5,11 @@ from django.utils import timezone
 from django.forms import ValidationError
 from django.forms.utils import to_current_timezone
 
-from daterangepicker.forms import time_range_str
+from daterangepicker.forms import time_range_str, DATETIME_INPUT_FORMAT
 from daterangepicker.widgets import time_range_validator, \
         DateTimeRangeWidget, DateTimeRangeField
 
 import datetime
-
-DATETIME_INPUT_FORMAT = '%m/%d/%Y %I:%M %p'
 
 
 class TimeRangeValidatorTestCase(TestCase):
@@ -30,22 +28,22 @@ class TimeRangeValidatorTestCase(TestCase):
             time_range_validator(time_range)    
 
     def test_bad_time_range_shorter(self):
-        """ Test an improperly formatted time range (list with 1 date)"""
-        time_range = [self.today]
+        """ Test an improperly formatted time range (tuple with 1 date)"""
+        time_range = (self.today, )
         
         with self.assertRaises(ValidationError):
             time_range_validator(time_range)    
 
     def test_bad_time_range_longer(self):
-        """ Test an improperly formatted time range (list with >2 dates) """
-        time_range = [self.today, self.today, self.today, self.today]
+        """ Test an improperly formatted time range (tuple with >2 dates) """
+        time_range = (self.today, self.today, self.today, self.today)
         
         with self.assertRaises(ValidationError):
             time_range_validator(time_range)    
 
     def test_early_start(self):
         """ Test time_range_validator with a start date in the past """
-        time_range = [self.yesterday, self.today]
+        time_range = (self.yesterday, self.today)
         
         with self.assertRaises(ValidationError):
             time_range_validator(time_range)    
@@ -55,19 +53,19 @@ class TimeRangeValidatorTestCase(TestCase):
         Test time_range_validator with a start date in the very near future 
        
         """
-        time_range = [self.today, self.today]
+        time_range = (self.today, self.today)
         
         time_range_validator(time_range)    
 
     def test_late_start(self):
         """ Test time_range_validator with a start date in the future """
-        time_range = [self.tomorrow, self.tomorrow]
+        time_range = (self.tomorrow, self.tomorrow)
         
         time_range_validator(time_range)    
 
     def test_early_end(self):
         """ Test time_range_validator with an end date in the past """
-        time_range = [self.yesterday, self.yesterday]
+        time_range = (self.yesterday, self.yesterday)
         
         with self.assertRaises(ValidationError):
             time_range_validator(time_range)    
@@ -77,7 +75,7 @@ class TimeRangeValidatorTestCase(TestCase):
         Test time_range_validator with an end date before the start date 
         
         """
-        time_range = [self.today, self.yesterday]
+        time_range = (self.today, self.yesterday)
         
         with self.assertRaises(ValidationError):
             time_range_validator(time_range)    
@@ -87,7 +85,7 @@ class TimeRangeValidatorTestCase(TestCase):
         Test time_range_validator with an end date after the start date 
         
         """
-        time_range = [self.today, self.tomorrow]
+        time_range = (self.today, self.tomorrow)
         
         time_range_validator(time_range)    
 
@@ -100,14 +98,6 @@ class DateTimeRangeWidgetTestCase(TestCase):
         self.now = timezone.now()
         self.tomorrow = self.now + datetime.timedelta(hours=24)
 
-    def test_widget_init_format(self):
-        """
-        Test that the DateTimeRangeWidget's datetime format is what we
-        expect when initialized with the defaults 
-        
-        """
-        self.assertEqual(self.widget.format, DATETIME_INPUT_FORMAT)
-
     def test_format_value_given_string(self):
         """ Test format_value given an already-correct string """
         time_range = time_range_str(self.now, self.now)
@@ -116,7 +106,7 @@ class DateTimeRangeWidgetTestCase(TestCase):
 
     def test_format_value_time_range_too_many(self):
         """ Test format_value with a time_range containing too many values """
-        time_range = [self.now, self.tomorrow, self.tomorrow]
+        time_range = (self.now, self.tomorrow, self.tomorrow)
 
         with self.assertRaises(ValueError):
             self.widget.format_value(time_range)
@@ -127,45 +117,130 @@ class DateTimeRangeWidgetTestCase(TestCase):
         near future 
         
         """
-        time_range = [self.now, self.tomorrow]
+        time_range = (self.now, self.tomorrow)
         expected = time_range_str(self.now, self.tomorrow)
 
         self.assertEqual(self.widget.format_value(time_range), expected)
+    
+    def test_format_value_given_none_none(self):
+        """ Test format_value given (None, None) for time_range """
+        result = self.widget.format_value(
+                        time_range=(None, None),
+                    )
+        
+        # Split returned string by separator
+        start, end, *extra = result.split(" - ")
+        
+        # There should be no items in the extra list
+        self.assertFalse(extra, "Too many dates in output")
+        # Start time and end time both should be the same by default
+        self.assertEqual(start, end, "Start date not equivalent to end date")
+
+        # Current hour is found by getting the current time in the current
+        # timezone and rounding down to the closest hour (i.e. replacing
+        # the minutes, seconds, and microseconds in the datetime object
+        # with 0).
+        cur_hour = to_current_timezone(self.now).replace(
+                        minute=0,
+                        second=0,
+                        microsecond=0,
+                    ) 
+        # Round current time up to nearest hour.
+        expected = cur_hour + datetime.timedelta(hours=1)
+    
+        # Parse actual start time into datetime object
+        actual = datetime.datetime.strptime(start,
+                DATETIME_INPUT_FORMAT) 
+        
+        # (Case I) The actual time and expected time should almost always be
+        # equal, since they are the result of rounding up to the closest hour. 
+        #
+        # (Case II) The only exception to this rule is when the "expected" time
+        # (time at the start of the test) is right on the edge of the next
+        # hour, meaning the "actual" time assigned to both ends of the
+        # time_range field could run over into the next hour.
+        #
+        # Examples:
+        #
+        # Case I) 
+        #
+        #    value       yyyy-mm-dd hh-mm-ss.µµµµµµ
+        # -----------   ----------------------------
+        #   expected  =  2017-12-29 02:26:59.896882
+        #             =  2017-12-29 03:00:00.000000
+        #    actual   =  2017-12-29 02:27:59.341242
+        #             =  2017-12-29 03:00:00.000000
+        # Case II) 
+        #
+        #    value       yyyy-mm-dd hh-mm-ss.µµµµµµ
+        # -----------   ----------------------------
+        #   expected  =  2017-12-29 02:59:59.896882
+        #             =  2017-12-29 03:00:00.000000
+        #    actual   =  2017-12-29 03:00:01.341242
+        #             =  2017-12-29 04:00:00.000000
+        #
+        self.assertLessEqual(actual - expected, datetime.timedelta(hours=1), 
+                "format_value gave a current date/time outside the expected "
+                + "1-hour error threshhold")
 
     def test_format_value_given_none(self):
         """ Test format_value given None for time_range """
-    
-        # Note: since the value of timezone.now() will be slightly later when
-        # run in format_value as compared to the value in setUp, we cannot
-        # compare equivalency directly.  
-        #
-        # Instead, we will convert the output string into a datetime object,
-        # and compare the times against an epsilon value of 1 minute, i.e. the
-        # difference in date/times is expected to be no more than 1 minute.
-        # This is similar to the process for comparing arbitrary floating-point
-        # values.
-
         result = self.widget.format_value(time_range=None)
-        start, end, *extra = result.split(" - ")
-
-        self.assertFalse(extra, 
-                "Too many dates in output")
         
-        self.assertEqual(start, end, 
-                "Start date not equivalent to end date")
+        # Split returned string by separator
+        start, end, *extra = result.split(" - ")
+        
+        # There should be no items in the extra list
+        self.assertFalse(extra, "Too many dates in output")
+        # Start time and end time both should be the same by default
+        self.assertEqual(start, end, "Start date not equivalent to end date")
 
-        result_datetime = datetime.datetime.strptime(start, 
+        # Current hour is found by getting the current time in the current
+        # timezone and rounding down to the closest hour (i.e. replacing
+        # the minutes, seconds, and microseconds in the datetime object
+        # with 0).
+        cur_hour = to_current_timezone(self.now).replace(
+                        minute=0,
+                        second=0,
+                        microsecond=0,
+                    ) 
+        # Round current time up to nearest hour.
+        expected = cur_hour + datetime.timedelta(hours=1)
+    
+        # Parse actual start time into datetime object
+        actual = datetime.datetime.strptime(start,
                 DATETIME_INPUT_FORMAT) 
-        expected_datetime = to_current_timezone(self.now).replace(second=0,
-                microsecond=0)
-
-        diff = result_datetime - expected_datetime
-
-        self.assertGreaterEqual(result_datetime, expected_datetime,
-                "format_value gave current date/time earlier than expected")
-
-        self.assertLessEqual(diff, datetime.timedelta(minutes=1), 
-                "format_value gave an inaccurate current date/time")
+        
+        # (Case I) The actual time and expected time should almost always be
+        # equal, since they are the result of rounding up to the closest hour. 
+        #
+        # (Case II) The only exception to this rule is when the "expected" time
+        # (time at the start of the test) is right on the edge of the next
+        # hour, meaning the "actual" time assigned to both ends of the
+        # time_range field could run over into the next hour.
+        #
+        # Examples:
+        #
+        # Case I) 
+        #
+        #    value       yyyy-mm-dd hh-mm-ss.µµµµµµ
+        # -----------   ----------------------------
+        #   expected  =  2017-12-29 02:26:59.896882
+        #             =  2017-12-29 03:00:00.000000
+        #    actual   =  2017-12-29 02:27:59.341242
+        #             =  2017-12-29 03:00:00.000000
+        # Case II) 
+        #
+        #    value       yyyy-mm-dd hh-mm-ss.µµµµµµ
+        # -----------   ----------------------------
+        #   expected  =  2017-12-29 02:59:59.896882
+        #             =  2017-12-29 03:00:00.000000
+        #    actual   =  2017-12-29 03:00:01.341242
+        #             =  2017-12-29 04:00:00.000000
+        #
+        self.assertLessEqual(actual - expected, datetime.timedelta(hours=1), 
+                "format_value gave a current date/time outside the expected "
+                + "1-hour error threshhold")
 
 
 class DateTimeRangeFieldTestCase(TestCase):
@@ -193,7 +268,7 @@ class DateTimeRangeFieldTestCase(TestCase):
         
         """
         with self.assertRaises(ValueError):
-            DateTimeRangeField(initial=[self.now])
+            DateTimeRangeField(initial=(self.now, ))
     
     def test_init_initial_too_many(self):
         """ 
@@ -203,7 +278,7 @@ class DateTimeRangeFieldTestCase(TestCase):
         """
         with self.assertRaises(ValueError):
             DateTimeRangeField(
-                        initial=[self.now, self.now, self.now, self.now],
+                        initial=(self.now, self.now, self.now, self.now),
                     )
 
     def test_init_two_values(self):
@@ -212,7 +287,7 @@ class DateTimeRangeFieldTestCase(TestCase):
         subfields are set up properly
         
         """
-        field = DateTimeRangeField(initial=[self.now, self.now])
+        field = DateTimeRangeField(initial=(self.now, self.now))
         
         self.assertEqual(field.fields[0].initial, self.now)
         self.assertEqual(field.fields[1].initial, self.now)
@@ -246,14 +321,14 @@ class DateTimeRangeFieldTestCase(TestCase):
 
     def test_compress_one_only(self):
         """ Test compress method with only one date/time """ 
-        time_range = [self.tomorrow]
+        time_range = (self.tomorrow, )
         
         with self.assertRaises(ValidationError):
             self.field.compress(time_range)
 
     def test_compress_two_correct(self):
         """ Test compress method with two correct date/times """
-        time_range = [self.tomorrow, self.tomorrow]
+        time_range = (self.tomorrow, self.tomorrow)
         
         self.assertEqual(self.field.compress(time_range), tuple(time_range))
 
@@ -265,14 +340,14 @@ class DateTimeRangeFieldTestCase(TestCase):
         as compress does not perform any validation. 
         
         """
-        time_range = [self.yesterday, self.now]
+        time_range = (self.yesterday, self.now)
         
         self.assertEqual(self.field.compress(time_range), tuple(time_range))
 
     def test_compress_too_many(self):
         """ Test compress method with more than 2 date/times """ 
-        time_range = [self.tomorrow, self.tomorrow, 
-                      self.tomorrow, self.tomorrow]
+        time_range = (self.tomorrow, self.tomorrow, 
+                      self.tomorrow, self.tomorrow)
         
         with self.assertRaises(ValidationError):
             self.field.compress(time_range)

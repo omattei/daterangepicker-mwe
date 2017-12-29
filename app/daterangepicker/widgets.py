@@ -4,10 +4,11 @@ from django.forms.fields import DateTimeField, MultiValueField
 from django.forms.utils import to_current_timezone
 
 from django.utils import timezone
-from django.utils.formats import localize_input
 from django.utils.translation import gettext_lazy as _
 
-DATETIME_INPUT_FORMAT = '%m/%d/%Y %I:%M %p'
+from daterangepicker.utils import DATETIME_INPUT_FORMAT, time_range_str
+
+import datetime
 
 
 def time_range_validator(time_range):
@@ -31,33 +32,47 @@ def time_range_validator(time_range):
 
 class DateTimeRangeWidget(TextInput):
     template_name = 'daterangepicker/forms/widgets/datetimerange.html'
-    supports_microseconds = True
+    supports_microseconds = False
 
-    def __init__(self, attrs=None, format=DATETIME_INPUT_FORMAT):
+    def __init__(self, attrs=None):
         super(DateTimeRangeWidget, self).__init__(attrs)
-        self.format = format 
         
     def format_value(self, time_range):
-        format = self.format
-        
         if isinstance(time_range, str):
             return time_range
 
-        if not time_range:
-            now = to_current_timezone(timezone.now())
-            start_time, end_time = [now, now]
+        if not time_range or None in time_range:
+            # Current hour is found by getting the current time in the current
+            # timezone and rounding down to the closest hour (i.e. replacing
+            # the minutes, seconds, and microseconds in the datetime object
+            # with 0).
+            cur_hour = to_current_timezone(timezone.now()).replace(
+                            minute=0,
+                            second=0,
+                            microsecond=0,
+                        ) 
+            
+            # Default time should be right at the upcoming hour. For example,
+            # all of the following current times should be rounded up to
+            # 10:00 am:
+            # 
+            #  - 9:00 am  
+            #  - 9:30 am
+            #  - 9:59 am
+            #  - 9:24 am
+            default_time = cur_hour + datetime.timedelta(hours=1)
+
+            start_time = default_time
+            end_time = default_time
         else:
             start_time, end_time, *extra = [
                         to_current_timezone(t) for t in time_range
                     ]
-    
+
             if extra: 
                 raise ValueError(_("Expected exactly two dates."))
 
-        return '{} - {}'.format(
-                    localize_input(start_time, format),
-                    localize_input(end_time, format)
-                )
+        return time_range_str(start_time, end_time)
 
     class Media:
         css = {
@@ -77,9 +92,10 @@ class DateTimeRangeField(MultiValueField):
 
     def __init__(self, initial=None, **kwargs):
         if initial is None:
-            initial = [None, None]
-        elif len(initial) != 2:
-            raise ValueError(_("Initial data list was expected to have exactly"
+            initial = (None, None)
+        
+        if len(initial) != 2:
+            raise ValueError(_("Initial data tuple was expected to have exactly"
                 + " two dates."))
 
         fields = (
@@ -95,8 +111,9 @@ class DateTimeRangeField(MultiValueField):
                         ),
                 )
        
-        super(DateTimeRangeField, self).__init__(fields, **kwargs)
-
+        super(DateTimeRangeField, self).__init__(
+                fields, initial=initial, **kwargs)
+    
     def clean(self, time_range):
         _time_range = time_range.split(' - ')
 

@@ -54,10 +54,12 @@ class EventFormTestCase(TestCase):
         """
         form = EventForm(instance=self.event)
         
-        self.assertEqual(form.fields['time_range'].fields[0].initial, 
-                self.event.time_start)
-        self.assertEqual(form.fields['time_range'].fields[1].initial, 
-                self.event.time_end)
+        self.assertEqual(form.initial['time_range'], 
+                        (
+                            self.event.time_start, 
+                            self.event.time_end
+                        )
+                    )
 
     def test_save_commit(self):
         """ Test saving a form to database """
