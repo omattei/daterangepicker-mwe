@@ -65,9 +65,9 @@ class DateTimeRangeWidget(TextInput):
             start_time = default_time
             end_time = default_time
         else:
-            start_time, end_time, *extra = [
+            start_time, end_time, *extra = (
                         to_current_timezone(t) for t in time_range
-                    ]
+                    )
 
             if extra: 
                 raise ValueError(_("Expected exactly two dates."))
