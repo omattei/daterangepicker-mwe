@@ -29,14 +29,11 @@ class TimeRangedModelForm(ModelForm):
         self.fields.pop('time_start', None)
         self.fields.pop('time_end', None)
         
-
-        # If we are updating an existing object, make sure the time_range
-        # defaults reflect this.
-        if 'instance' in kwargs:
-            time_start = self.initial.pop('time_start', None)
-            time_end = self.initial.pop('time_end', None)
-
-            self.initial.setdefault('time_range', (time_start, time_end))
+        time_start = self.initial.pop('time_start', None)
+        time_end = self.initial.pop('time_end', None)
+        
+        # Set a default time_range if it was not already provided.
+        self.initial.setdefault('time_range', (time_start, time_end))
 
     def save(self, commit=True):
         """ 
