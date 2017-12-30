@@ -2,8 +2,9 @@
 from django.db import models
 
 
-# Create your models here.
 class Event(models.Model):
+    """ Represents a named event. """
     title = models.CharField(max_length=100)
     time_start = models.DateTimeField()
     time_end = models.DateTimeField()
+

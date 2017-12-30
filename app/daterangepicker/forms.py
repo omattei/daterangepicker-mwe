@@ -4,7 +4,7 @@ from django.forms import ModelForm
 from daterangepicker import utils
 from daterangepicker.utils import DATETIME_INPUT_FORMAT, time_range_generator
 
-from daterangepicker.widgets import DateTimeRangeField
+from daterangepicker.fields import DateTimeRangeField
 
 __all__ = ['TimeRangedModelForm', 'utils', 
            'DATETIME_INPUT_FORMAT', 'time_range_generator']
@@ -31,7 +31,7 @@ class TimeRangedModelForm(ModelForm):
         
         # Set a default time_range if it was not already provided.
         self.initial.setdefault('time_range', (time_start, time_end))
-
+        
     def save(self, commit=True):
         """ 
         Extend saving such that time_start and time_end values are manually
