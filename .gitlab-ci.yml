@@ -1,0 +1,13 @@
+stages:
+ - test
+
+before_script: 
+  - pip3 install -r requirements.txt
+  - cd app/
+  - python3 manage.py makemigrations simpleapp 
+
+test:
+    stage: test
+    script: 
+     - coverage run --rcfile=../.coveragerc --source='.' manage.py test
+
