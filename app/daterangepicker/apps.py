@@ -3,4 +3,4 @@ from django.apps import AppConfig
 
 
 class DateRangePickerConfig(AppConfig):
-    name = 'daterangepicker'
+    name = "daterangepicker"

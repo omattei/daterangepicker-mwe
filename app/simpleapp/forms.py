@@ -11,9 +11,10 @@ class EventForm(TimeRangedModelForm):
     time_end fields in the model with a time_range field in the form.
 
     """
+
     class Meta:
         model = Event
-        fields = '__all__'
+        fields = "__all__"
 
 
 class EventFormAllowsPast(EventForm):
@@ -25,5 +26,5 @@ class EventFormAllowsPast(EventForm):
     (It is not currently used in any view function.)
 
     """
-    time_range = DateTimeRangeField(allow_past=True)
 
+    time_range = DateTimeRangeField(allow_past=True)

@@ -1,0 +1,21 @@
+# Refer to 
+# https://black.readthedocs.io/en/stable/pyproject_toml.html 
+# for more info on the formatting.
+
+[tool.black]
+line-length = 88
+target-version = ['py38']
+include = '\.pyi?$'
+exclude = '''
+
+(
+  /(
+    | \.git          
+    | \.tox
+    | \.venv
+    | _build
+  )/
+  | foo.py           # also separately exclude a file named foo.py in
+                     # the root of the project
+)
+'''

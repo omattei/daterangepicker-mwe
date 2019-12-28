@@ -6,7 +6,7 @@ from django.utils.formats import localize_input
 
 from django.forms.utils import to_current_timezone
 
-DATETIME_INPUT_FORMAT = '%m/%d/%Y %I:%M %p'
+DATETIME_INPUT_FORMAT = "%m/%d/%Y %I:%M %p"
 
 
 def time_range_generator(start, end, html=False):
@@ -24,7 +24,7 @@ def time_range_generator(start, end, html=False):
     """
 
     # The seperator to use between start and end date/times
-    separator = ' &ndash; ' if html else ' - '
+    separator = " &ndash; " if html else " - "
 
     # The function to use to format a datetime object into a string
     datetime_fmtr_func = format if html else localize_input
@@ -33,13 +33,8 @@ def time_range_generator(start, end, html=False):
     fmt_str = settings.DATETIME_FORMAT if html else DATETIME_INPUT_FORMAT
 
     return separator.join(
-                [
-                    datetime_fmtr_func(
-                            to_current_timezone(start), fmt_str
-                        ),
-                    datetime_fmtr_func(
-                            to_current_timezone(end), fmt_str
-                        ),
-                ]
-            )
-
+        [
+            datetime_fmtr_func(to_current_timezone(start), fmt_str),
+            datetime_fmtr_func(to_current_timezone(end), fmt_str),
+        ]
+    )

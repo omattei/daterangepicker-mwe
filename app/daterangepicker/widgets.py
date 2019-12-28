@@ -11,12 +11,12 @@ import datetime
 
 
 class DateTimeRangeWidget(TextInput):
-    template_name = 'daterangepicker/forms/widgets/datetimerange.html'
+    template_name = "daterangepicker/forms/widgets/datetimerange.html"
     supports_microseconds = False
 
     def __init__(self, attrs=None):
         super(DateTimeRangeWidget, self).__init__(attrs)
-        
+
     def format_value(self, time_range):
         if isinstance(time_range, str):
             return time_range
@@ -27,16 +27,14 @@ class DateTimeRangeWidget(TextInput):
             # the minutes, seconds, and microseconds in the datetime object
             # with 0).
             cur_hour = to_current_timezone(timezone.now()).replace(
-                            minute=0,
-                            second=0,
-                            microsecond=0,
-                        ) 
-            
+                minute=0, second=0, microsecond=0,
+            )
+
             # Default time should be right at the upcoming hour. For example,
             # all of the following current times should be rounded up to
             # 10:00 am:
-            # 
-            #  - 9:00 am  
+            #
+            #  - 9:00 am
             #  - 9:30 am
             #  - 9:59 am
             #  - 9:24 am
@@ -45,23 +43,19 @@ class DateTimeRangeWidget(TextInput):
             start_time = default_time
             end_time = default_time
         else:
-            start_time, end_time, *extra = [
-                        to_current_timezone(t) for t in time_range
-                    ]
+            start_time, end_time, *extra = [to_current_timezone(t) for t in time_range]
 
-            if extra: 
+            if extra:
                 raise ValueError(_("Expected exactly two dates."))
 
         return time_range_generator(start_time, end_time)
 
     class Media:
         css = {
-                'all': ('daterangepicker/css/styles.css', ),
-            }
+            "all": ("daterangepicker/css/styles.css",),
+        }
         js = (
-                '//cdn.jsdelivr.net/momentjs/latest/moment.min.js',
-                '//cdn.jsdelivr.net/bootstrap.daterangepicker/2/' 
-                + 'daterangepicker.js',
-                'daterangepicker/js/script.js',
-            )
-
+            "//cdn.jsdelivr.net/momentjs/latest/moment.min.js",
+            "//cdn.jsdelivr.net/bootstrap.daterangepicker/2/" + "daterangepicker.js",
+            "daterangepicker/js/script.js",
+        )
